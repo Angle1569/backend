@@ -3,32 +3,38 @@ const mongoose = require("mongoose");
 
 async function addProduct(req, res) {
   try {
-    const { name, quentity, item_type, item_group, item_weight, item_uon } =
-      req.body;
+    const {
+      productName,
+      totalQuantity,
+      productType,
+      productGroup,
+      totalWeightInGrams,
+      unitOfMeasure,
+    } = req.body;
 
-    if (!name) {
-      return res.status(404).json({ message: "name are required" });
+    if (!productName) {
+      return res.status(404).json({ message: "product Name are required" });
     }
 
     const count = await Product.countDocuments();
-    const item_id = `PROD-${String(count + 1).padStart(3, "0")}`;
+    const itemId = `PROD-${String(count + 1).padStart(3, "0")}`;
 
-    // Check for existing item_id
-    const existing = await Product.findOne({ item_id });
+    // Check for existing itemId
+    const existing = await Product.findOne({ itemId });
     if (existing) {
       return res
         .status(404)
-        .json({ message: "Product with this name already exists" });
+        .json({ message: "Product with this Name already exists" });
     }
 
     const newProduct = new Product({
-      item_id,
-      name,
-      quentity,
-      item_type,
-      item_group,
-      item_weight,
-      item_uon,
+      itemId,
+      productName,
+      totalQuantity,
+      productType,
+      productGroup,
+      totalWeightInGrams,
+      unitOfMeasure,
     });
     await newProduct.save();
 
@@ -45,7 +51,7 @@ async function addProduct(req, res) {
 async function updateProduct(req, res) {
   try {
     const updatedProduct = await Product.findOneAndUpdate(
-      { item_id: req.params.id },
+      { itemId: req.params.id },
       { $set: req.body },
       { new: true }
     ).select("-_id -__v");
@@ -70,7 +76,7 @@ async function updateProduct(req, res) {
 async function deleteProduct(req, res) {
   try {
     const deletedProduct = await Product.findOneAndDelete({
-      item_id: req.params.id,
+      itemId: req.params.id,
     });
 
     if (!deletedProduct) {
@@ -95,9 +101,9 @@ async function getProduct(req, res) {
     const query = search
       ? {
           $or: [
-            { name: { $regex: search, $options: "i" } },
-            { item_id: { $regex: search, $options: "i" } },
-            { item_type: { $regex: search, $options: "i" } },
+            { productName: { $regex: search, $options: "i" } },
+            { itemId: { $regex: search, $options: "i" } },
+            { productType: { $regex: search, $options: "i" } },
           ],
         }
       : {};
@@ -152,6 +158,23 @@ async function getProductId(req, res) {
     res.status(500).json({ message: "Internal Server Error", status: false });
   }
 }
+
+// async function updateProductStock(productId, soldQty, soldWgt) {
+//   const product = await Product.findById(productId);
+
+//   if (!product) throw new Error("Product not found");
+
+//   product.soldQuantity += soldQty;
+//   product.remainingQuantity -= soldQty;
+
+//   product.soldWeight += soldWgt;
+//   product.remainingWeight -= soldWgt;
+
+//   product.is_sold =
+//     product.remainingQuantity <= 0 || product.remainingWeight <= 0;
+
+//   await product.save();
+// }
 
 module.exports = {
   addProduct,

@@ -15,8 +15,10 @@ async function addOldGood(req, res) {
       totalAmount,
     } = req.body;
 
-    if (!customerName) {
-      return res.status(404).json({ message: "name are required" });
+    if (!customerName || !mobile) {
+      return res
+        .status(404)
+        .json({ message: "name and mobile no are required" });
     }
 
     const count = await OldMetal.countDocuments();

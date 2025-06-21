@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const SaleBill = require("../models/SaleBill");
 
 // 🔹 Create Sale Bill
 router.post("/bill", async (req, res) => {

@@ -11,7 +11,7 @@ const {
 const authMiddleware = require("../middleware/auth");
 
 //Add Product
-router.post("/add", addProduct);
+router.post("/productAdd", addProduct);
 
 // Get all Products
 router.get("/", getProduct);

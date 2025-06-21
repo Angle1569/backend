@@ -13,6 +13,8 @@ const OldMetal = require("./project/routes/oldMetal");
 
 const server = express();
 
+// PdlxNntJ6Fwi3iT8
+
 server.use(cors());
 server.disable("x-powered-by");
 server.use(cookieParser());
@@ -39,7 +41,7 @@ server.use("/api/sale-bills", saleBillRoutes);
 
 server.use("/api/customer", Customer);
 
-server.use("/api/bill", Invoice);
+server.use("/api/invoice", Invoice);
 
 server.use("/api/old-metal", OldMetal);
 
