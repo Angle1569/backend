@@ -26,7 +26,7 @@ server.use(express.json());
 mongoose.Promise = global.Promise;
 mongoose.set("strictQuery", false);
 mongoose
-  .connect(MONGO_URL, {
+  .connect(URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
