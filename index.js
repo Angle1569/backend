@@ -31,7 +31,7 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(console.log("Connected to database"))
-  .catch((err) => console.log(err), process.exit(1));
+  .catch((err) => console.log(err));
 
 Router(server);
 
