@@ -4,16 +4,12 @@ const mongoose = require("mongoose");
 const InvoiceSchema = new mongoose.Schema({
   invoiceNo: { type: String, required: true, unique: true },
   customerName: { type: String, required: true },
-  customerMobile: { type: String, required: true },
-  customerAddress: { type: String, default: "" },
-  date: { type: Date, default: Date.now },
+  mobile: { type: String, required: true },
+  address: { type: String, default: "" },
+  paymentMethod: { type: String },
+  billDate: { type: Date },
   type: { type: String, enum: ["Retail", "Wholesale"], default: "Retail" },
-  paymentMethod: {
-    type: String,
-    enum: ["Cash", "Card", "UPI"],
-    default: "Cash",
-  },
-  time: { type: String, default: new Date().toLocaleTimeString() },
+  time: { type: String, default: () => new Date().toLocaleTimeString() },
   status: {
     type: String,
     enum: ["Pending", "Completed", "Cancelled"],
@@ -22,18 +18,41 @@ const InvoiceSchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "UserData" },
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "UserData" },
   updatedAt: { type: Date, default: Date.now },
-  discount: { type: Number, default: 0 },
-  tax: { type: Number, default: 0 },
-  totalAmount: { type: Number, required: true },
-  amountRecived: { type: Number, default: 0 },
-  remarks : {type: String},
-  items: [
+  createdAt: { type: Date, default: Date.now },
+
+  amountSection: {
+    billAmount: Number,
+    gst: Number,
+    gstBillAmount: Number,
+    billDiscount: Number,
+    urdAmount: Number,
+    manualUrdAmt: Number,
+    netBalance: Number,
+    totalBalance: Number,
+    amtReceived: Number,
+  },
+
+  saleItems: [
     {
       product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
       quantitySold: Number,
-      weightSold: Number,
+      soldWeightInGrams: Number,
       rate: Number,
       total: Number,
+      purity: String,
+      makingCharge: Number,
+      productName: String,
+    },
+  ],
+
+  urdItems: [
+    {
+      oldProduct: { type: String, ref: "OldMetal" },
+      netWt: Number,
+      purity: String,
+      rate: Number,
+      mkgAmount: Number,
+      totalAmount: Number,
     },
   ],
 });

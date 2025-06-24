@@ -101,7 +101,7 @@ async function getBillId(req, res) {
 
   const lastNo = last?.billNo?.split("-")[1] || "0000";
   const nextNo = String(Number(lastNo) + 1).padStart(4, "0");
-
+  
   res.json({ billNo: `BILL-${nextNo}` });
 }
 

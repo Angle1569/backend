@@ -3,13 +3,15 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const Router = require("./project/routes/auth");
-// const URI = process.env.MONGO_URL || "mongodb://localhost:27017/mydatabase";
 const PORT = process.env.PORT || 3000;
 const productRoutes = require("./project/routes/product");
 const saleBillRoutes = require("./project/routes/saleBill");
 const Customer = require("./project/routes/customer");
 const Invoice = require("./project/routes/invoice");
 const OldMetal = require("./project/routes/oldMetal");
+const RecPayement = require("./project/routes/receive");
+
+require("dotenv").config();
 
 const server = express();
 
@@ -44,6 +46,7 @@ server.use("/api/customer", Customer);
 server.use("/api/invoice", Invoice);
 
 server.use("/api/old-metal", OldMetal);
+server.use("/api/payment", RecPayement);
 
 server.listen(PORT, () =>
   console.log(`Server running on http://localhost:${PORT}`)

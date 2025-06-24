@@ -12,33 +12,42 @@ async function createInvoice(req, res) {
   try {
     const {
       customerName,
-      customerMobile,
-      customerAddress = "",
+      mobile,
+      address = "",
+      paymentMethod,
+      billDate,
       type = "Retail",
-      paymentMethod = "Cash",
-      remarks = "",
-      invoiceItems,
-      createdBy = null,
+      createdBy,
+      amountSection,
+      saleItems,
+      urdItems,
     } = req.body;
 
-    if (!customerName || !customerMobile) {
+    console.log("Body received:", req.body);
+
+    if (!customerName || !mobile) {
       return res.status(400).json({ message: "Missing required fields." });
     }
 
-    if (!invoiceItems || invoiceItems.length === 0) {
-      return res.status(400).json({ message: "Invoice items required." });
+    if (saleItems.length === 0 && urdItems.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "At least one sale or URD item is required." });
     }
 
+    const processedSaleItems = [];
     let totalAmount = 0;
-    const updatedItems = [];
 
-    // Loop through items, validate & update stock
-    for (const item of invoiceItems) {
+    for (const item of saleItems) {
       const {
         itemId,
         quantitySold = 0,
-        soldWeightInGrams = 0,
         rate = 0,
+        netWt = 0,
+        mkgAtm = 0,
+        totalAmount = 0,
+        purity,
+        productName,
       } = item;
 
       if (!itemId) {
@@ -66,7 +75,7 @@ async function createInvoice(req, res) {
 
       if (
         product.remainingQuantity < quantitySold ||
-        product.remainingWeight < soldWeightInGrams
+        product.remainingWeightInGrams < netWt
       ) {
         return res.status(400).json({
           message: `Insufficient stock for product: ${product.productName}`,
@@ -75,23 +84,25 @@ async function createInvoice(req, res) {
 
       // Update stock
       product.soldQuantity += quantitySold;
-      product.soldWeightInGrams += soldWeightInGrams;
+      product.soldWeightInGrams += netWt;
       product.remainingQuantity -= quantitySold;
-      product.remainingWeightInGrams -= soldWeightInGrams;
+      product.remainingWeightInGrams -= netWt;
       product.isSoldOut =
         product.remainingQuantity <= 0 || product.remainingWeightInGrams <= 0;
 
       await product.save();
 
-      const total = parseFloat((rate * soldWeightInGrams).toFixed(2));
+      const total = parseFloat((rate * netWt + mkgAtm).toFixed(2));
       totalAmount += total;
 
-      updatedItems.push({
+      processedSaleItems.push({
         product: product._id,
-        quantitySold,
-        weightSold: soldWeightInGrams,
+        soldWeightInGrams: netWt,
         rate,
         total,
+        purity,
+        makingCharge: mkgAtm,
+        productName,
       });
     }
 
@@ -100,14 +111,19 @@ async function createInvoice(req, res) {
     const newInvoice = new Invoice({
       invoiceNo,
       customerName,
-      customerMobile,
-      customerAddress,
-      type,
+      mobile,
+      address,
       paymentMethod,
+      billDate,
+      type,
       time: new Date().toLocaleTimeString(),
-      totalAmount,
-      remarks,
-      items: updatedItems,
+
+      amountSection: {
+        ...amountSection,
+        billAmount: amountSection?.billAmount || totalAmount,
+      },
+      saleItems: processedSaleItems,
+      urdItems,
       createdBy,
     });
 
