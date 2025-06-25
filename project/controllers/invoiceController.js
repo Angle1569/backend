@@ -1,3 +1,4 @@
+const Customer = require("../models/Customer");
 const Invoice = require("../models/Invoice");
 const Product = require("../models/Product");
 
@@ -34,9 +35,26 @@ async function createInvoice(req, res) {
         .status(400)
         .json({ message: "At least one sale or URD item is required." });
     }
+    
+    let customer = await Customer.findOne({ mobile });
+
+    if (!customer) {
+      customer = new Customer({
+        customerName,
+        mobile,
+        address,
+        openbalance: 0,
+        billAmount: amountSection?.billAmount || 0,
+        amtReceived: amountSection?.amtReceived || 0,
+        balance:
+          (amountSection?.totalBalance || 0) -
+          (amountSection?.amtReceived || 0),
+        createdBy,
+      });
+      await customer.save();
+    }
 
     const processedSaleItems = [];
-    let totalAmount = 0;
 
     for (const item of saleItems) {
       const {
@@ -45,7 +63,6 @@ async function createInvoice(req, res) {
         rate = 0,
         netWt = 0,
         mkgAtm = 0,
-        totalAmount = 0,
         purity,
         productName,
       } = item;
@@ -92,14 +109,13 @@ async function createInvoice(req, res) {
 
       await product.save();
 
-      const total = parseFloat((rate * netWt + mkgAtm).toFixed(2));
-      totalAmount += total;
+      // const total = parseFloat((rate * netWt + mkgAtm).toFixed(2));
+      // totalAmount += total;
 
       processedSaleItems.push({
         product: product._id,
         soldWeightInGrams: netWt,
         rate,
-        total,
         purity,
         makingCharge: mkgAtm,
         productName,
@@ -120,7 +136,6 @@ async function createInvoice(req, res) {
 
       amountSection: {
         ...amountSection,
-        billAmount: amountSection?.billAmount || totalAmount,
       },
       saleItems: processedSaleItems,
       urdItems,
@@ -131,7 +146,6 @@ async function createInvoice(req, res) {
 
     res.status(201).json({
       message: "Invoice created successfully",
-      invoice: newInvoice,
     });
   } catch (err) {
     console.error("Invoice Error:", err);

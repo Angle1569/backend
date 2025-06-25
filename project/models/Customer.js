@@ -31,6 +31,11 @@ const customerSchema = new mongoose.Schema(
     openbalance: {
       type: Number,
     },
+    billAmount: {
+      type: Number,
+    },
+    amtReceived: { type: Number },
+    balance: { type: Number },
     paymentmode: {
       type: String,
     },

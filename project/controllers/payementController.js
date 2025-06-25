@@ -1,15 +1,15 @@
-const Invoice = require("../models/Invoice");
 const PaymentReceive = require("../models/PaymentReceive");
+const Customer = require("../models/Customer");
+const Invoice = require("../models/Invoice");
 
 const generateInvoiceNumber = async () => {
-  const count = await Invoice.countDocuments();
+  const count = await PaymentReceive.countDocuments();
   return `REC${String(count + 1).padStart(4, "0")}`;
 };
 
 async function receivePayment(req, res) {
   try {
-    const { invoiceNo, mobile, amountPaid, paymentMode, note, receivedBy } =
-      req.body;
+    const { mobile, amountPaid, paymentMode, receivedBy } = req.body;
 
     if (!mobile || !amountPaid) {
       return res
@@ -22,12 +22,16 @@ async function receivePayment(req, res) {
       status: { $ne: "Completed" },
     }).sort({ createdAt: -1 });
 
+    let customer = await Customer.findOne({ mobile });
+    const customerName = customer?.customerName || "Unknown";
+    const address = customer?.address || "";
+
     if (!invoice) {
-      const invoiceNo = await generateInvoiceNumber();
+      const recNo = await generateInvoiceNumber();
       invoice = new Invoice({
-        invoiceNo,
-        customerName: "Unknown", 
-        address: "",
+        recNo,
+        customerName,
+        address,
         type: "Retail",
         billDate: new Date(),
         time: new Date().toLocaleTimeString(),
@@ -62,15 +66,12 @@ async function receivePayment(req, res) {
       mobile: invoice.mobile,
       amountPaid,
       paymentMode,
-      note,
       receivedBy,
     });
     await payment.save();
 
     res.status(200).json({
       message: "Payment received and invoice updated.",
-      invoice,
-      payment,
     });
   } catch (err) {
     console.error("Receive Payment Error:", err);

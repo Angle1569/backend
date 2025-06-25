@@ -1,4 +1,9 @@
-const OldMetal = require("../models/OldMetal");
+const UrdPurchase = require("../models/UrdPurchase");
+
+const generateInvoiceNumber = async () => {
+  const count = await UrdPurchase.countDocuments();
+  return `URD-${String(count + 1).padStart(4, "0")}`;
+};
 
 async function addOldGood(req, res) {
   try {
@@ -6,13 +11,8 @@ async function addOldGood(req, res) {
       customerName,
       mobile,
       billDate,
-      oldProductName,
-      netWeight,
-      purity,
+      items = [],
       paymentmode,
-      rate,
-      mkgAmount,
-      totalAmount,
     } = req.body;
 
     if (!customerName || !mobile) {
@@ -21,28 +21,15 @@ async function addOldGood(req, res) {
         .json({ message: "name and mobile no are required" });
     }
 
-    const count = await OldMetal.countDocuments();
-    const billNo = `${String(count + 1).padStart(3, "0")}`;
+    const billNo = await generateInvoiceNumber();
 
-    const existing = await OldMetal.findOne({ billNo });
-    if (existing) {
-      return res
-        .status(404)
-        .json({ message: "Bill this number already exist" });
-    }
-
-    const newBill = new OldMetal({
+    const newBill = new UrdPurchase({
       billNo,
       customerName,
-      purity,
-      paymentmode,
-      totalAmount,
       mobile,
-      mkgAmount,
       billDate,
-      rate,
-      oldProductName,
-      netWeight,
+      paymentmode,
+      items,
     });
 
     await newBill.save();
@@ -73,7 +60,7 @@ async function getBillList(req, res) {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const totalItems = await OldMetal.countDocuments(query);
 
-    const bill = await OldMetal.find(query)
+    const bill = await UrdPurchase.find(query)
       .select("-_id -__v")
       .skip(skip)
       .limit(parseInt(limit))
@@ -96,17 +83,7 @@ async function getBillList(req, res) {
   }
 }
 
-async function getBillId(req, res) {
-  const last = await OldMetal.findOne().sort({ createdAt: -1 });
-
-  const lastNo = last?.billNo?.split("-")[1] || "0000";
-  const nextNo = String(Number(lastNo) + 1).padStart(4, "0");
-  
-  res.json({ billNo: `BILL-${nextNo}` });
-}
-
 module.exports = {
   addOldGood,
   getBillList,
-  getBillId,
 };

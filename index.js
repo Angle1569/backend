@@ -1,6 +1,5 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const Router = require("./project/routes/auth");
 const PORT = process.env.PORT || 3000;
@@ -10,6 +9,8 @@ const Customer = require("./project/routes/customer");
 const Invoice = require("./project/routes/invoice");
 const OldMetal = require("./project/routes/oldMetal");
 const RecPayement = require("./project/routes/receive");
+
+const cors = require("cors");
 
 require("dotenv").config();
 
@@ -24,6 +25,13 @@ server.use(cookieParser());
 server.use(express.urlencoded({ extended: true }));
 
 server.use(express.json());
+
+// server.use(
+//   cors({
+//     origin: "https://inventoryjew-production.up.railway.app",
+//     credentials: true,
+//   })
+// );
 
 mongoose.Promise = global.Promise;
 mongoose.set("strictQuery", false);
