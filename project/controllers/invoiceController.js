@@ -61,7 +61,7 @@ async function createInvoice(req, res) {
         itemId,
         quantitySold = 0,
         rate = 0,
-        netWt = 0,
+        weightSold = 0,
         mkgAtm = 0,
         purity,
         productName,
@@ -92,7 +92,7 @@ async function createInvoice(req, res) {
 
       if (
         product.remainingQuantity < quantitySold ||
-        product.remainingWeightInGrams < netWt
+        product.remainingWeightInGrams < weightSold
       ) {
         return res.status(400).json({
           message: `Insufficient stock for product: ${product.productName}`,
@@ -101,9 +101,9 @@ async function createInvoice(req, res) {
 
       // Update stock
       product.soldQuantity += quantitySold;
-      product.soldWeightInGrams += netWt;
+      product.soldWeightInGrams += weightSold;
       product.remainingQuantity -= quantitySold;
-      product.remainingWeightInGrams -= netWt;
+      product.remainingWeightInGrams -= weightSold;
       product.isSoldOut =
         product.remainingQuantity <= 0 || product.remainingWeightInGrams <= 0;
 
@@ -114,7 +114,7 @@ async function createInvoice(req, res) {
 
       processedSaleItems.push({
         product: product._id,
-        soldWeightInGrams: netWt,
+        soldWeightInGrams: weightSold,
         rate,
         purity,
         makingCharge: mkgAtm,

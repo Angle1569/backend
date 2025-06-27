@@ -14,7 +14,7 @@ const PaymentSchema = new mongoose.Schema(
       default: () => new Date().toISOString().slice(0, 10),
     },
     amountPaid: { type: Number, required: true },
-    paymentMode: { type: String }, // Cash, UPI, Card etc.
+    paymentMode: { type: String },
     receivedBy: { type: String },
     receivedAt: { type: Date, default: Date.now },
   },
