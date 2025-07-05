@@ -96,19 +96,25 @@ async function deleteProduct(req, res) {
 
 async function getProduct(req, res) {
   try {
-    const { search = "", page = 1, limit = 30 } = req.query;
+    const { search = "", page = 1, limit = 30, type } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const baseFilter = type
+      ? { productType: { $regex: `^${type}$`, $options: "i" } }
+      : { productType: { $in: ["gold", "silver"] } };
 
     const query = search
       ? {
+          ...baseFilter,
           $or: [
             { productName: { $regex: search, $options: "i" } },
             { itemId: { $regex: search, $options: "i" } },
             { productType: { $regex: search, $options: "i" } },
           ],
         }
-      : {};
+      : baseFilter;
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
     const totalItems = await Product.countDocuments(query);
 
     const products = await Product.find(query)
@@ -116,11 +122,27 @@ async function getProduct(req, res) {
       .skip(skip)
       .limit(parseInt(limit));
 
+    const allMatchingProducts = await Product.find(query);
+    const totalWeight = allMatchingProducts.reduce(
+      (acc, product) => {
+        acc.totalWeightInGrams += product.totalWeightInGrams || 0;
+        acc.soldWeightInGrams += product.soldWeightInGrams || 0;
+        acc.remainingWeightInGrams += product.remainingWeightInGrams || 0;
+        return acc;
+      },
+      {
+        totalWeightInGrams: 0,
+        soldWeightInGrams: 0,
+        remainingWeightInGrams: 0,
+      }
+    );
+
     return res.status(200).json({
       message: "Products fetched successfully",
       status: true,
       products,
       totalItems,
+      totalWeightInGrams: totalWeight,
       totalPages: Math.ceil(totalItems / limit),
       currentPage: parseInt(page),
       pageSize: parseInt(limit),

@@ -35,7 +35,7 @@ async function createInvoice(req, res) {
         .status(400)
         .json({ message: "At least one sale or URD item is required." });
     }
-    
+
     let customer = await Customer.findOne({ mobile });
 
     if (!customer) {
@@ -156,4 +156,35 @@ async function createInvoice(req, res) {
   }
 }
 
-module.exports = { createInvoice };
+async function getInvoiceList(req, res) {
+  try {
+    const { search = "", page = 1, limit = 10 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const query = {
+      $or: [
+        { customerName: { $regex: search, $options: "i" } },
+        { mobile: { $regex: search, $options: "i" } },
+      ],
+    };
+
+    const invoice = await Invoice.find(query)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .sort({ createdAt: -1 });
+
+    const total = await Invoice.countDocuments(query);
+
+    res.status(200).json({
+      data: invoice,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (err) {
+    console.error("Error fetching customers:", err);
+    res.status(404).json({ message: "No record found " });
+  }
+}
+
+module.exports = { createInvoice , getInvoiceList};
